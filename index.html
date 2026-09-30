@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Тест: можно ли вам в чат к блогеру</title>
+<style>
+:root{--bg:#f5f3ff;--card:#fff;--text:#1e1b2e;--muted:#6b6880;--accent:#6d4aff;--ok:#16a34a;--bad:#dc2626;--line:#e4e0f5;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14121f;--card:#1f1c30;--text:#ece9ff;--muted:#9a96b5;--accent:#9b82ff;--line:#2e2a47}}
+:root[data-theme="dark"]{--bg:#14121f;--card:#1f1c30;--text:#ece9ff;--muted:#9a96b5;--accent:#9b82ff;--line:#2e2a47}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.5}
+main{max-width:680px;margin:0 auto;padding:20px 16px 60px}
+h1{font-size:1.6rem;margin:12px 0 4px}
+h2{font-size:1.15rem;margin:0 0 12px}
+.sub{color:var(--muted);margin:0 0 20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:16px}
+input[type=text]{width:100%;padding:12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);font-size:1rem}
+button{font:inherit;cursor:pointer;border:0;border-radius:10px;padding:12px 18px;background:var(--accent);color:#fff;font-weight:600}
+button:disabled{opacity:.5;cursor:default}
+.opt{display:block;width:100%;text-align:left;margin:8px 0;background:var(--bg);color:var(--text);border:1px solid var(--line);font-weight:400}
+.opt.sel{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 18%,var(--bg))}
+.prog{height:6px;background:var(--line);border-radius:3px;margin-bottom:14px;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--accent);width:0;transition:width .3s}
+.score{font-size:2.4rem;font-weight:800;color:var(--accent)}
+.row{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.row:first-child{border-top:0}
+.row b{word-break:break-word}
+.row small{display:block;color:var(--muted)}
+.pill{white-space:nowrap;font-weight:700;color:var(--accent)}
+.hide{display:none}
+.note{color:var(--muted);font-size:.9rem}
+</style>
+</head>
+<body>
+<main>
+<h1>🎬 Тест: можно ли вам в чат к блогеру</h1>
+<p class="sub">6 ситуаций из чата большого канала. Правильных ответов не показываем: просто выбирайте, как поступили бы вы. <a href="#wallcard" style="color:var(--accent)">🏆 Смотреть стену результатов</a></p>
+
+<section class="card" id="start">
+  <h2>Как вас зовут?</h2>
+  <input type="text" id="name" maxlength="30" placeholder="Имя или ник">
+  <p class="note">Имя и результат попадут на общую стену ниже, и их увидят все.</p>
+  <button id="go">Начать тест</button>
+</section>
+
+<section class="card hide" id="quiz">
+  <div class="prog"><i id="bar"></i></div>
+  <h2 id="q"></h2>
+  <div id="opts"></div>
+  <button id="next" class="hide">Дальше</button>
+</section>
+
+<section class="card hide" id="res">
+  <div class="score" id="sc"></div>
+  <h2 id="verdict"></h2>
+  <p class="note" id="saveState"></p>
+  <button id="again">Пройти ещё раз</button>
+</section>
+
+<section class="card" id="wallcard">
+  <h2>🏆 Стена результатов</h2>
+  <div id="wall"><p class="note">Загрузка…</p></div>
+</section>
+</main>
+
+<script>
+// === НАСТРОЙКИ БАЗЫ (Supabase). Эти два значения публичные, их можно держать в репозитории ===
+const SUPABASE_URL="PASTE_PROJECT_URL";      // например https://abcdxyz.supabase.co
+const SUPABASE_ANON_KEY="PASTE_ANON_KEY";    // ключ anon / public
+const CONFIGURED=SUPABASE_URL.startsWith("https://")&&!SUPABASE_ANON_KEY.startsWith("PASTE");
+const H={"apikey":SUPABASE_ANON_KEY,"Authorization":"Bearer "+SUPABASE_ANON_KEY,"Content-Type":"application/json"};
+const Q=[
+{t:"Блогер выложил видео, и оно вам не понравилось. Что напишете в комментариях?",o:["«Автор скатился, отписка, все свободны»","Объясню, что именно не зашло, без оскорблений. Или просто не буду писать","«Раньше было лучше» в каждой ветке","Сделаю нарезку «почему он исписался» и разошлю по чатам"]},
+{t:"В чате стрима в сороковой раз спрашивают «когда новое видео?». Вы...",o:["Отвечу капсом, чтобы все запомнили","Напишу то же самое ещё раз, вдруг дойдёт","Посмотрю закреп и описание, а потом не буду спамить","Начну сбор подписей за ответ"]},
+{t:"Блогер рассказал о личных трудностях. Ваша реакция?",o:["Дам десять непрошеных советов по жизни","«Это точно ради просмотров»","Разберу его личную жизнь прямо в чате","Напишу пару добрых слов или просто посмотрю дальше"]},
+{t:"Двое зрителей ругаются в чате. Вы...",o:["Вступлю в драку на стороне «своих»","Подолью масла: «ого, а продолжение будет?»","Не буду поддерживать срач. Могу спокойно попросить без грубости или пожаловаться модератору","Сделаю скриншоты и выложу в паблик"]},
+{t:"Вы не выиграли в розыгрыше от блогера. Что дальше?",o:["Поздравлю победителя и пойду смотреть дальше","Напишу, что всё подстроено, и потребую отчёт","Напишу блогеру в личку 30 раз","Объявлю бойкот каналу"]},
+{t:"Кто-то в чате просит «скиньте, где блогер живёт». Вы...",o:["«Легко, адрес публичный, вот он»","Поищу по старым видео, вдруг там видно дом","Разошлю тем, кто попросит в личку","Не ищу и не делюсь: личные данные не для чата"]}
+];
+const V=[
+[6,"Можно хоть в модераторы чата 👑"],
+[4,"Хороший зритель, только поменьше капса 🔠"],
+[2,"Читать можно, а писать лучше после чая ☕"],
+[0,"Сделайте вдох и отложите телефон. Мы в вас верим 💜"]];
+const $=id=>document.getElementById(id);
+let i=0,name="",answers=[],sel=-1;
+
+function show(id){["start","quiz","res"].forEach(s=>$(s).classList.toggle("hide",s!==id))}
+function verdict(s){return V.find(v=>s>=v[0])[1]}
+
+function render(){
+  const q=Q[i];sel=-1;
+  $("bar").style.width=(i/Q.length*100)+"%";
+  $("q").textContent=(i+1)+"/"+Q.length+". "+q.t;
+  $("next").classList.add("hide");
+  const box=$("opts");box.textContent="";
+  q.o.forEach((txt,k)=>{
+    const b=document.createElement("button");b.className="opt";b.textContent=txt;
+    b.onclick=()=>choose(k);box.appendChild(b);
+  });
+}
+function choose(k){
+  sel=k;
+  Array.from($("opts").children).forEach((b,n)=>b.classList.toggle("sel",n===k));
+  $("next").textContent=i===Q.length-1?"Завершить тест":"Дальше";
+  $("next").classList.remove("hide");
+}
+async function send(){
+  const r=await fetch(SUPABASE_URL+"/rest/v1/rpc/submit_result",{method:"POST",headers:H,body:JSON.stringify({p_name:name,p_answers:answers})});
+  if(!r.ok)throw new Error("fail");
+  return {score:await r.json()};
+}
+async function finish(){
+  $("bar").style.width="100%";
+  show("res");
+  if(!CONFIGURED){$("sc").textContent="";$("saveState").textContent="База не подключена, результат не сохранён.";return}
+  $("sc").textContent="…";$("verdict").textContent="";
+  const st=$("saveState");st.textContent="Считаем и сохраняем на стену…";
+  try{
+    const j=await send();
+    $("sc").textContent=j.score+" / "+Q.length;
+    $("verdict").textContent=verdict(j.score);
+    st.textContent="Ваш результат на стене! ✅";
+    loadWall();
+  }catch(e){
+    $("sc").textContent="";
+    st.textContent="Не удалось сохранить результат. Попробуйте ещё раз чуть позже.";
+  }
+}
+$("go").onclick=()=>{
+  name=$("name").value.trim().slice(0,30);
+  if(!name){$("name").focus();return}
+  i=0;answers=[];show("quiz");render();
+};
+$("next").onclick=()=>{
+  if(sel<0)return;
+  answers.push(sel);i++;
+  i<Q.length?render():finish();
+};
+$("again").onclick=()=>{show("start")};
+
+function drawWall(rows){
+  const w=$("wall");w.textContent="";
+  if(!rows.length){const p=document.createElement("p");p.className="note";p.textContent="Пока пусто. Станьте первым!";w.appendChild(p);return}
+  rows.forEach(x=>{
+    const row=document.createElement("div");row.className="row";
+    const l=document.createElement("div"),b=document.createElement("b"),s=document.createElement("small");
+    b.textContent=String(x.name||"Аноним").slice(0,30);
+    s.textContent=verdict(Number(x.score)||0);
+    l.appendChild(b);l.appendChild(s);
+    const p=document.createElement("span");p.className="pill";
+    p.textContent=(Number(x.score)||0)+" / "+(Number(x.total)||Q.length);
+    row.appendChild(l);row.appendChild(p);w.appendChild(row);
+  });
+}
+async function loadWall(){
+  if(!CONFIGURED){$("wall").textContent="Стена ещё не подключена: впишите SUPABASE_URL и SUPABASE_ANON_KEY в начале скрипта (см. инструкцию).";return}
+  try{
+    const r=await fetch(SUPABASE_URL+"/rest/v1/results?select=name,score,total&order=created_at.desc&limit=100",{headers:H});
+    if(!r.ok)throw new Error("fail");
+    drawWall(await r.json());
+  }catch(e){$("wall").textContent="Не удалось загрузить стену. Проверьте настройки базы."}
+}
+loadWall();setInterval(loadWall,10000);
+</script>
+</body>
+</html>
